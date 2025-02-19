@@ -33,6 +33,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../services/api'
 import { HomeIconChat } from '../components/icons'
+import { User } from '../types'
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -82,15 +83,24 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   
       console.log("Avatar FormData:", formData);
   
-      await authAPI.updateProfile(formData);
+      const response = await authAPI.updateProfile(formData);
   
-      // ✅ Update user state to reflect the new avatar
-      const updatedUser = { ...user, avatar: URL.createObjectURL(file) };
+      // Get the avatar URL from the API response instead of creating a local URL
+      const newAvatarUrl = response.data.avatar;
+  
+      // Update user state with all required fields
+      const updatedUser: User = {
+        ...user!,
+        avatar: newAvatarUrl || '',
+        id: user!.id || '',       
+        email: user!.email || '',  
+        username: user!.username || ''
+      };
       
-      setUser(updatedUser);  // Ensure setUser is properly used
+      setUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
   
-      console.log("✅ Avatar updated successfully");
+      console.log("Avatar updated successfully");
     } catch (error) {
       console.error('Failed to update avatar:', error);
       setUploadError(error instanceof Error ? error.message : 'Failed to upload avatar');
@@ -98,6 +108,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
       setIsUploading(false);
     }
   };
+  
   
   
   

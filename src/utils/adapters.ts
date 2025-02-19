@@ -8,16 +8,29 @@ import {
   } from '../types';
   
   export const adaptContact = (apiContact: APIContact): Contact => {
+    // Create a Message object from the last_message string
+    const lastMessage = apiContact.last_message ? {
+      id: 'temp-' + Date.now(),  // Generate temporary ID for display
+      content: apiContact.last_message,
+      timestamp: apiContact.created_at,
+      senderId: apiContact.contact_details.id.toString(),
+      receiverId: undefined, // We don't have this info from the API
+      senderName: apiContact.contact_details.username,
+      senderAvatar: apiContact.contact_details.avatar || undefined,
+      isImage: false,
+      isRead: true
+    } : undefined;
+  
     return {
-      id: apiContact.id.toString(),  // Use Contact record ID for contact operations
+      id: apiContact.id.toString(),
+      userId: apiContact.contact_details.id.toString(),
       name: apiContact.contact_details.username,
       email: apiContact.contact_details.email,
       avatar: apiContact.contact_details.avatar || undefined,
-      lastMessage: apiContact.last_message || undefined,
+      lastMessage: lastMessage,
       timestamp: apiContact.created_at,
       unread: apiContact.unread_count,
-      online: apiContact.online,
-      userId: apiContact.contact_details.id.toString()  // Keep User ID for messages
+      online: apiContact.online
     };
   };
   

@@ -1,6 +1,7 @@
 // src/components/ContactList.tsx
 import { Box, Typography, Avatar } from '@mui/material';
 import { Contact } from '../types';
+import { ChatIcon } from '../components/icons'
 
 interface ContactListProps {
   contacts: Contact[];
@@ -65,8 +66,12 @@ const ContactList = ({ contacts, selectedContact, onSelectContact }: ContactList
                 )}
               </Box>
               <Typography variant="body2" color="text.secondary" noWrap>
-                {lastMessage}
+                {lastMessage && typeof lastMessage === 'object' && 'content' in lastMessage 
+                  ? lastMessage.content 
+                  : 'No messages'}
               </Typography>
+
+
             </Box>
             {unread > 0 && (
               <Box
