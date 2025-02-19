@@ -11,8 +11,9 @@ import {
   Link,
   Alert
 } from '@mui/material';
-import { Google as GoogleIcon, Home as HomeIcon } from '@mui/icons-material';
+import { Google as GoogleIcon } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
+import { HomeIcon } from '../components/icons';
 
 // import { GoogleLogin } from '@react-oauth/google';
 // import { jwtDecode } from 'jwt-decode';
@@ -87,14 +88,7 @@ const Login = () => {
             mb: 4
           }}
         >
-          <HomeIcon sx={{ color: '#1976d2', mr: 1 }} />
-          <Typography 
-            component="h1" 
-            variant="h6" 
-            sx={{ color: '#1976d2' }}
-          >
-            Home
-          </Typography>
+          <HomeIcon/>
         </Box>
 
         <Paper 

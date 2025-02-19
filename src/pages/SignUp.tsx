@@ -10,8 +10,9 @@ import {
   Link,
   Alert
 } from '@mui/material';
-import { Home as HomeIcon } from '@mui/icons-material';
+import { HomeIcon } from '../components/icons';
 import { useAuth } from '../context/AuthContext';
+
 
 const SignUp = () => {
   const [email, setEmail] = useState('');
@@ -57,14 +58,7 @@ const SignUp = () => {
             mb: 4
           }}
         >
-          <HomeIcon sx={{ color: '#1976d2', mr: 1 }} />
-          <Typography 
-            component="h1" 
-            variant="h6" 
-            sx={{ color: '#1976d2' }}
-          >
-            Home
-          </Typography>
+          <HomeIcon />
         </Box>
 
         <Paper 
