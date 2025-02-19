@@ -322,18 +322,18 @@ const Chat = () => {
 
   const loadMessages = async (contact: Contact) => {
     if (!contact) {
-      console.error("❌ No contact provided for loading messages.");
+      console.error("No contact provided for loading messages.");
       return;
     }
 
-    const contactUserId = contact.userId; // ✅ This is the receiver's user ID
-    const contactId = contact.id; // ✅ This is the contact object ID in the DB
+    const contactUserId = contact.userId; // This is the receiver's user ID
+    const contactId = contact.id; // This is the contact object ID in the DB
 
     try {
-      console.log('📌 Fetching messages for contact user ID:', contactUserId);
+      console.log('Fetching messages for contact user ID:', contactUserId);
 
-      const response = await chatAPI.getMessages(contactUserId); // ✅ Use userId for API call
-      console.log('📌 Raw API Response:', response.data);
+      const response = await chatAPI.getMessages(contactUserId); // Use userId for API call
+      console.log('Raw API Response:', response.data);
 
       if (Array.isArray(response.data)) {
         const adaptedMessages = response.data.map(msg => ({
@@ -349,18 +349,18 @@ const Chat = () => {
           isRead: Boolean(msg.is_read),
         }));
 
-        console.log('📌 Adapted Messages:', adaptedMessages);
+        console.log('Adapted Messages:', adaptedMessages);
         setMessages(adaptedMessages);
       } else {
-        console.log('📌 No messages found');
+        console.log('No messages found');
         setMessages([]);
       }
 
-      console.log(`📌 Marking messages as read for contact ID: ${contactId}`);
-      await chatAPI.markAsRead(contactId); // ✅ Use contact ID for marking as read
+      console.log(`Marking messages as read for contact ID: ${contactId}`);
+      await chatAPI.markAsRead(contactId); // Use contact ID for marking as read
 
     } catch (error) {
-      console.error('❌ Failed to load messages:', error);
+      console.error('Failed to load messages:', error);
       setMessages([]);
       setError('Failed to load messages. Please try again.');
     }
@@ -373,118 +373,95 @@ const handleSendMessage = async (content: string) => {
   }
 
   try {
-    const receiverId = selectedContact.userId;
-    console.log('📤 Sending message to userId:', receiverId);
-
-    // Ensure WebSocket connection is active
-    wsService.ensureConnection(receiverId);
-
-    // Send message via REST API
-    const response = await chatAPI.sendMessage(
-      receiverId,
-      content.trim()
-    );
-
-    console.log('✅ Message sent response:', response.data);
-
-    // Create new message object
     const newMessage: Message = {
-      id: response.data.id.toString(),
-      content: response.data.content,
-      timestamp: response.data.created_at,
+      id: `temp-${Date.now()}`,  // Use a temporary ID until WebSocket confirms
+      content: content.trim(),
+      timestamp: new Date().toISOString(),
       senderId: user?.id || '',
-      receiverId: receiverId,
+      receiverId: selectedContact.userId,
       senderName: user?.username || '',
       senderAvatar: user?.avatar,
-      isImage: response.data.is_image,
-      imageUrl: response.data.image_url || undefined,
-      isRead: response.data.is_read
+      isImage: false,
+      imageUrl: undefined,
+      isRead: false
     };
 
-    // Immediately add message to the messages list
+    // Add message to local UI immediately
     setMessages(prev => [...prev, newMessage]);
 
-    // Update the contact's last message immediately
-    setContacts(prev => prev.map(contact => {
-      if (contact.userId === selectedContact.userId) {
-        return {
-          ...contact,
-          lastMessage: content.trim(),
-          timestamp: response.data.created_at
-        };
-      }
-      return contact;
-    }));
-
-    // Send via WebSocket for real-time updates to other clients
+    // Send via WebSocket instead of REST API
     wsService.sendMessage({
       type: 'message',
-      receiver: receiverId,
-      content: content.trim(),
+      receiver: parseInt(selectedContact.userId),
+      content: content.trim()
     });
 
   } catch (error: any) {
-    console.error('❌ Failed to send message:', error.response?.data || error);
-    const errorMessage = error.response?.data?.detail || 
-                        error.response?.data?.error || 
-                        'Failed to send message';
+    console.error('Failed to send message:', error.response?.data || error);
+    setError("Failed to send message. Try again.");
+  }
+};
+
+
+const handleAddPerson = async (email: string, name: string) => {
+  if (!email.trim()) {
+    setError("Email is required.");
+    console.error("❌ Email is missing.");
+    return;
+  }
+
+  if (!name.trim()) {
+    console.warn("⚠️ Name is empty, defaulting to 'Unknown'.");
+    name = "Unknown"; // Provide a default name
+  }
+
+  try {
+    setError(null);
+    console.log('📌 Sending invitation data:', { email, name });
+
+    const response = await chatAPI.invitePerson({ email, name });
+
+    console.log('✅ Invitation response:', response.data);
+
+    setContacts(prev => [...prev, response.data]);
+    setShowNotification(true);
+    setTimeout(() => setShowNotification(false), 3000);
+    setIsAddPersonOpen(false);
+  } catch (error: any) {
+    console.error('❌ Failed to add person:', error);
+
+    if (error.response) {
+      console.log('❌ API Response Data:', error.response.data);
+      console.log('❌ Status Code:', error.response.status);
+    }
+
+    const errorMessage = error.response?.data?.email?.[0] || 
+                         error.response?.data?.detail ||
+                         'Failed to add person. Please try again.';
+
     setError(errorMessage);
   }
 };
 
-  const handleAddPerson = async (email: string, name: string) => {
-    if (!email.trim()) {
-      setError("Email is required.");
-      console.error("❌ Email is missing.");
-      return;
-    }
 
-    if (!name.trim()) {
-      console.warn("⚠️ Name is empty, defaulting to 'Unknown'.");
-      name = "Unknown"; // Provide a default name if empty
-    }
-
-    try {
-      setError(null);
-      console.log('📌 Sending invitation data:', { email, name });
-
-      const response = await chatAPI.invitePerson({ email, name });
-
-      console.log('✅ Invitation response:', response.data);
-
-      setContacts(prev => [...prev, response.data]);
-      setShowNotification(true);
-      setTimeout(() => setShowNotification(false), 3000);
-      setIsAddPersonOpen(false);
-    } catch (error: any) {
-      console.error('❌ Failed to add person:', error);
-
-      if (error.response) {
-        console.log('❌ API Response Data:', error.response.data);
-        console.log('❌ Status Code:', error.response.status);
-      }
-
-      const errorMessage = error.response?.data?.email?.[0] || 
-                           error.response?.data?.detail ||
-                           'Failed to add person. Please try again.';
-
-      setError(errorMessage);
-    }
-};
   
-
-  const handleNewMessage = (message: Message) => {
-    if (selectedContact && 
-        (message.senderId === selectedContact.id || 
-         message.senderId === user?.id)) {
-      setMessages(prev => [...prev, message]);
+const handleNewMessage = (message: Message) => {
+  setMessages((prev) => {
+    // Check if message already exists to prevent duplication
+    if (prev.some((msg) => msg.id === message.id)) {
+      console.warn(" Duplicate message detected, skipping:", message);
+      return prev;
     }
 
-    const contactId = message.senderId === user?.id
-      ? message.receiverId ?? selectedContact?.id ?? ""  // Use selected contact as fallback
-      : message.senderId;
+    return [...prev, message];
+  });
 
-    updateContactLastMessage(contactId, message);
+  // Update last message
+  const contactId = message.senderId === user?.id
+    ? message.receiverId
+    : message.senderId;
+
+  updateContactLastMessage(contactId, message);
 };
 
 

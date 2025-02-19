@@ -12,6 +12,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
+  setUser: (user: User | null) => void;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, password2: string) => Promise<void>;
@@ -110,10 +111,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (data.avatar) formData.append('avatar', data.avatar);
 
       const response = await authAPI.updateProfile(formData);
-      const updatedUser = response.data;
-      
-      localStorage.setItem('user', JSON.stringify(updatedUser));
+      const { access, refresh, user: updatedUser} = response.data;
+
       setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
     } catch (error: any) {
       throw new Error(error.response?.data?.detail || 'Failed to update profile');
     }
@@ -138,6 +139,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <AuthContext.Provider value={{ 
       user, 
+      setUser,
       isLoading, 
       login, 
       register, 

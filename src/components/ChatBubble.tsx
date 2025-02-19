@@ -26,13 +26,13 @@ const ChatBubble = ({ message, timestamp, isOwn, senderName, senderAvatar }: Cha
         mb: 2,
       }}
     >
-      {!isOwn && (
+      {/* {!isOwn && (
         <Avatar
           src={senderAvatar}
           alt={senderName}
           sx={{ width: 32, height: 32 }}
         />
-      )}
+      )} */}
       <Box
         sx={{
           maxWidth: '70%',
@@ -41,11 +41,11 @@ const ChatBubble = ({ message, timestamp, isOwn, senderName, senderAvatar }: Cha
           alignItems: isOwn ? 'flex-end' : 'flex-start',
         }}
       >
-        {!isOwn && (
+        {/* {!isOwn && (
           <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
             {senderName}
           </Typography>
-        )}
+        )} */}
         <Box
           sx={{
             bgcolor: isOwn ? '#e3f2fd' : '#f5f5f5',

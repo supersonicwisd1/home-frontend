@@ -9,7 +9,7 @@ interface MessageListProps {
 }
 
 const MessageList = ({ messages, currentUserId }: MessageListProps) => {
-  // console.log('📌 Rendering Messages:', messages); // Debug Log
+  // console.log('Rendering Messages:', messages); // Debug Log
   // console.log('MessageList received:', { 
   //   messages, 
   //   currentUserId,

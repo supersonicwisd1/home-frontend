@@ -30,6 +30,7 @@ import {
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { authAPI } from '../services/api'
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -39,9 +40,11 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   const [searchHouse, setSearchHouse] = useState('');
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
-  const { user, logout, updateProfile } = useAuth();
+  const { user, setUser, logout, updateProfile } = useAuth();
   
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -67,14 +70,35 @@ const MainLayout = ({ children }: MainLayoutProps) => {
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      try {
-        await updateProfile({ avatar: file });
-      } catch (error) {
-        console.error('Failed to update avatar:', error);
-      }
+    if (!file) return;
+  
+    setIsUploading(true);
+  
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+  
+      console.log("Avatar FormData:", formData);
+  
+      await authAPI.updateProfile(formData);
+  
+      // ✅ Update user state to reflect the new avatar
+      const updatedUser = { ...user, avatar: URL.createObjectURL(file) };
+      
+      setUser(updatedUser);  // Ensure setUser is properly used
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+  
+      console.log("✅ Avatar updated successfully");
+    } catch (error) {
+      console.error('Failed to update avatar:', error);
+      setUploadError(error instanceof Error ? error.message : 'Failed to upload avatar');
+    } finally {
+      setIsUploading(false);
     }
   };
+  
+  
+  
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
@@ -94,7 +118,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
       >
         {/* Logo */}
         <Box sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
-          <img src="/house-icon.png" alt="Home" style={{ width: 24, height: 24 }} />
+          <img src="./public/house-icon.png" alt="Home" style={{ width: 24, height: 24 }} />
           <Typography sx={{ color: 'white', fontSize: '18px', fontWeight: 500 }}>
             Home
           </Typography>
@@ -115,7 +139,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
           }}
         >
           <MessagesIcon sx={{ fontSize: 20 }} />
-          <a href='/chat'><Typography sx={{ fontSize: '16px' }}>Messages</Typography></a>
+          <a href=''><Typography sx={{ fontSize: '16px' }}>Messages</Typography></a>
         </Box>
 
         {/* Logout Button */}

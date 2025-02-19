@@ -14,6 +14,9 @@ import {
 import { Google as GoogleIcon, Home as HomeIcon } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 
+// import { GoogleLogin } from '@react-oauth/google';
+// import { jwtDecode } from 'jwt-decode';
+
 const Login = () => {
   const location = useLocation();
   const [email, setEmail] = useState(location.state?.registeredEmail || '');
@@ -49,6 +52,22 @@ const Login = () => {
     // Implement Google OAuth login
     // This depends on your Google OAuth setup
   };
+
+  // const handleGoogleLogin = async (credentialResponse: any) => {
+  //   try {
+  //     const decoded = jwtDecode(credentialResponse.credential);
+  //     console.log("Google decoded data:", decoded);
+
+  //     if (!decoded || !decoded.email) {
+  //       console.error("Invalid Google login response");
+  //       return;
+  //     }
+
+  //     await googleLogin(credentialResponse.credential);
+  //   } catch (error) {
+  //     console.error("Google login failed:", error);
+  //   }
+  // };
 
   return (
     <Box

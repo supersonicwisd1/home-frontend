@@ -39,12 +39,19 @@ export const authAPI = {
   googleLogin: (token: string) => 
     api.post('/auth/google-auth/', { access_token: token }),
 
-  updateProfile: (data: FormData) =>
-    api.patch('/auth/avatar/', data, {
+  updateProfile: (data: FormData) => {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      return Promise.reject(new Error("No authentication token found"));
+    }
+  
+    return api.patch('/auth/avatar/', data, {
       headers: {
         'Content-Type': 'multipart/form-data',
+        'Authorization': `Bearer ${token}`,  // Ensure token is included
       },
-    }),
+    });
+  },
 };
 
 // Add chatAPI export
@@ -52,24 +59,36 @@ export const chatAPI = {
   getContacts: () => 
     api.get('/messaging/contacts/'),
   
-  invitePerson: (data: { email: string; name?: string }) =>
-    api.post('/messaging/contacts/invite/', {
-      contact_details: {
-        email: data.email, 
-        username: data.name
+  invitePerson: async (data: { email: string; name?: string }) => {
+    if (!data.email.trim()) {
+      console.error("Email is missing. Cannot send request.");
+      throw new Error("Email is required.");
+    }
+
+    const payload = {
+      email: data.email, 
+      username: data.name || "Unknown" // Provide a fallback name
+    };
+
+    console.log("Sending invite request with payload:", payload);
+
+    return api.post('/messaging/contacts/invite/', payload, {
+      headers: {
+        'Content-Type': 'application/json'
       }
-    }),
+    });
+  },
   
     getMessages: async (contactId: string) => {
       if (!contactId) {
-        console.error("❌ Cannot fetch messages: contactId is missing.");
+        console.error("Cannot fetch messages: contactId is missing.");
         return { data: [] }; // Return empty array instead of breaking
       }
       
-      console.log('📌 Fetching messages with contact param:', contactId);
+      console.log('Fetching messages with contact param:', contactId);
       console.log("this is the contact id", contactId)
       return api.get(`/messaging/messages/`, {
-        params: { contact: contactId } // ✅ Use actual `contactId`
+        params: { contact: contactId } // Use actual `contactId`
       });
     },  
   
@@ -85,6 +104,5 @@ export const chatAPI = {
   markAsRead: (contactId: string) =>
     api.post(`/messaging/contacts/${contactId}/mark_read/`)
 };
-
 
 export default api;

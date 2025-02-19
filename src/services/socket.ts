@@ -9,16 +9,16 @@ export class WebSocketService {
   private authenticated = false;
   private token: string | null = null;
   private shouldReconnect = true;
-  private typingTimeout: NodeJS.Timeout | null = null;
+  private typingTimeout: number | null = null;
 
   connect(token: string, contactId?: string) {
     if (this.connecting || this.socket?.readyState === WebSocket.OPEN) {
-      console.log("✅ WebSocket already connected or connecting.");
+      console.log("WebSocket already connected or connecting.");
       return;
     }
 
     if (!token) {
-      console.error("❌ Cannot connect to WebSocket: No token provided.");
+      console.error("Cannot connect to WebSocket: No token provided.");
       return;
     }
 
@@ -38,7 +38,7 @@ export class WebSocketService {
     this.socket = new WebSocket(wsUrl);
 
     this.socket.onopen = () => {
-      console.log("✅ WebSocket Connected Successfully");
+      console.log("WebSocket Connected Successfully");
       this.reconnectAttempts = 0;
       this.connecting = false;
       this.authenticated = true;
@@ -50,7 +50,7 @@ export class WebSocketService {
         console.log("📥 Received message:", data);
         this.messageHandlers.forEach(handler => handler(data));
       } catch (error) {
-        console.error("❌ Error parsing WebSocket message:", error);
+        console.error("Error parsing WebSocket message:", error);
       }
     };
 
@@ -104,7 +104,7 @@ export class WebSocketService {
       }, 100);
 
     } catch (error) {
-      console.error("❌ Error sending message:", error);
+      console.error("Error sending message:", error);
       
       // Attempt to reconnect if there was an error
       if (this.socket?.readyState !== WebSocket.OPEN) {
