@@ -34,7 +34,7 @@ export class WebSocketService {
       contactId ? `&contact_id=${contactId}` : ''
     }`;
 
-    console.log("🔄 Connecting to:", wsUrl);
+    // console.log("Connecting to:", wsUrl);
     this.socket = new WebSocket(wsUrl);
 
     this.socket.onopen = () => {
@@ -55,13 +55,13 @@ export class WebSocketService {
     };
 
     this.socket.onerror = (event) => {
-      console.error("⚠️ WebSocket Error:", event);
+      console.error("WebSocket Error:", event);
       this.connecting = false;
       this.authenticated = false;
     };
 
     this.socket.onclose = (event) => {
-      console.log(`🚫 WebSocket Disconnected (Code: ${event.code}, Reason: ${event.reason})`);
+      console.log(`WebSocket Disconnected (Code: ${event.code}, Reason: ${event.reason})`);
       this.connecting = false;
       this.authenticated = false;
 
@@ -71,7 +71,7 @@ export class WebSocketService {
           event.code !== 1000) {  // 1000 is normal closure
         const delay = this.baseDelay * Math.pow(1.5, this.reconnectAttempts);
         this.reconnectAttempts++;
-        console.log(`🔄 Attempting to reconnect in ${delay}ms (Attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+        console.log(`Attempting to reconnect in ${delay}ms (Attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
         setTimeout(() => this.connect(this.token!, contactId), delay);
       }
     };
@@ -79,7 +79,7 @@ export class WebSocketService {
 
   sendMessage(data: any) {
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
-      console.error("🚫 Cannot send message: WebSocket is not connected.");
+      console.error("Cannot send message: WebSocket is not connected.");
       return;
     }
 
@@ -92,13 +92,13 @@ export class WebSocketService {
         image_url: data.imageUrl || null
       };
 
-      console.log("📤 Sending message:", message);
+      console.log("Sending message:", message);
       this.socket.send(JSON.stringify(message));
 
       // Set up a timeout to check if the connection was closed
       setTimeout(() => {
         if (this.socket?.readyState === WebSocket.CLOSED) {
-          console.log("🔄 Connection closed after sending, attempting to reconnect...");
+          console.log("Connection closed after sending, attempting to reconnect...");
           this.connect(this.token!, message.receiver.toString());
         }
       }, 100);
@@ -108,7 +108,7 @@ export class WebSocketService {
       
       // Attempt to reconnect if there was an error
       if (this.socket?.readyState !== WebSocket.OPEN) {
-        console.log("🔄 Attempting to reconnect after error...");
+        console.log("Attempting to reconnect after error...");
         this.connect(this.token!, data.receiver.toString());
       }
     }
@@ -117,7 +117,7 @@ export class WebSocketService {
   // Add a new method to check connection
   ensureConnection(contactId: string) {
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
-      console.log("🔄 Ensuring WebSocket connection...");
+      console.log("Ensuring WebSocket connection...");
       this.connect(this.token!, contactId);
     }
   }

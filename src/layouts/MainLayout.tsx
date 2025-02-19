@@ -118,7 +118,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
       >
         {/* Logo */}
         <Box sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
-          <img src="./public/house-icon.png" alt="Home" style={{ width: 24, height: 24 }} />
+          <img src="/house-icon.png" alt="Home" style={{ width: 24, height: 24 }} />
           <Typography sx={{ color: 'white', fontSize: '18px', fontWeight: 500 }}>
             Home
           </Typography>

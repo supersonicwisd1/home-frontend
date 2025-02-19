@@ -49,6 +49,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const payload = JSON.parse(atob(token.split('.')[1]));
           if (payload.exp * 1000 < Date.now()) {
             logout();
+            navigate('/');
           }
         } catch (error) {
           console.error('Error checking token expiration:', error);
