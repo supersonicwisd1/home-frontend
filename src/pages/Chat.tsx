@@ -284,7 +284,7 @@ const Chat = () => {
               content: data.content,
               timestamp: data.timestamp || new Date().toISOString(),
               senderId: data.senderId.toString(),
-              receiverId: data.receiverId.toString(),
+              receiverId: data.receiverId?.toString(),
               senderName: data.senderName,
               senderAvatar: data.senderAvatar,
               isImage: data.isImage || false,
@@ -461,22 +461,31 @@ const handleNewMessage = (message: Message) => {
     ? message.receiverId
     : message.senderId;
 
+  if (!contactId) {
+    console.warn("No valid contactId found for message:", message);
+    return;
+  }
+
   setContacts(prev => prev.map(contact => {
     if (contact.userId === contactId) {
+      // Create a properly typed lastMessage object
+      const lastMessage: Message = {
+        id: message.id,
+        content: message.content,
+        timestamp: message.timestamp,
+        senderId: message.senderId,
+        receiverId: message.receiverId,
+        senderName: message.senderName,
+        senderAvatar: message.senderAvatar || undefined,  // Handle possible null
+        isImage: Boolean(message.isImage),
+        imageUrl: message.imageUrl || undefined,  // Handle possible null
+        isRead: Boolean(message.isRead)
+      };
+
       return {
         ...contact,
-        lastMessage: {
-          id: message.id,
-          content: message.content,
-          timestamp: message.timestamp,
-          senderId: message.senderId,
-          receiverId: message.receiverId,
-          senderName: message.senderName,
-          senderAvatar: message.senderAvatar,
-          isImage: message.isImage,
-          imageUrl: message.imageUrl,
-          isRead: message.isRead
-        }
+        lastMessage: message,
+        timestamp: message.timestamp  // Update contact timestamp
       };
     }
     return contact;

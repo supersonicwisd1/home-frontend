@@ -2,6 +2,7 @@
 import { Box, Typography, Avatar } from '@mui/material';
 import { Contact } from '../types';
 import { ChatIcon } from '../components/icons'
+import { format } from 'date-fns';
 
 interface ContactListProps {
   contacts: Contact[];
@@ -21,6 +22,14 @@ const ContactList = ({ contacts, selectedContact, onSelectContact }: ContactList
     );
   }
 
+  const formatTime = (timestamp: string) => {
+    try {
+      return format(new Date(timestamp), 'HH:mm a');
+    } catch (error) {
+      return '';
+    }
+  };
+
   return (
     <Box>
       {contacts.map((contact) => {
@@ -31,7 +40,7 @@ const ContactList = ({ contacts, selectedContact, onSelectContact }: ContactList
         const name = contact?.name || 'Unknown';
         const avatar = contact?.avatar;
         const lastMessage = contact.lastMessage ? contact.lastMessage.content : 'No messages';
-        const timestamp = contact.lastMessage ? contact.lastMessage.timestamp : '';
+        const timestamp = contact.lastMessage ? formatTime(contact.lastMessage.timestamp) : '';
 
         const unread = typeof contact?.unread === 'number' ? contact.unread : 0;
 
