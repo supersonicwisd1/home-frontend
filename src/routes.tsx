@@ -18,8 +18,6 @@ export const Routes = () => {
           </ProtectedRoute>
         }
       />
-      {/* Add a catch-all route */}
-      <Route path="*" element={<Login />} />
     </RouterRoutes>
   );
 };
