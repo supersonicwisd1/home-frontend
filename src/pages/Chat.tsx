@@ -193,13 +193,13 @@ const Chat = () => {
     const initializeChat = async () => {
       try {
         setIsLoading(true);
-        const token = localStorage.getItem("access_token"); // Retrieve token
+        const token = localStorage.getItem("access_token");
         if (!token) {
           console.error("No token found for WebSocket authentication");
           return;
         }
-        wsService.connect(token);  // ✅ Pass token to WebSocket
         await loadContacts();
+        // Don't initialize WebSocket here, we'll do it when a contact is selected
       } catch (error) {
         console.error("Failed to initialize chat:", error);
         setError("Failed to connect to chat service");
@@ -210,57 +210,10 @@ const Chat = () => {
   
     initializeChat();
   
-    const unsubscribe = wsService.onMessage((data: any) => {
-      console.log('WebSocket message received:', data);
-  
-      if (data.type === 'chat_message') {
-        const message = data.message;
-        console.log('New message received:', message);
-  
-        // Add message to messages list if current contact is selected
-        if (selectedContact && 
-            (message.sender_id === selectedContact.userId || 
-             message.sender_id === user?.id)) {
-          const newMessage: Message = {
-            id: message.id.toString(),
-            content: message.content,
-            timestamp: message.timestamp,
-            senderId: message.sender_id.toString(),
-            receiverId: message.receiver_id.toString(),
-            senderName: message.sender_name,
-            senderAvatar: message.sender_avatar,
-            isImage: message.is_image,
-            imageUrl: message.image_url,
-            isRead: message.is_read
-          };
-          setMessages(prev => [...prev, newMessage]);
-        }
-  
-        // Update contact's last message and unread count
-        const contactId = message.sender_id === user?.id ? 
-          message.receiver_id : 
-          message.sender_id;
-  
-        setContacts(prev => prev.map(contact => {
-          if (contact.userId === contactId.toString()) {
-            return {
-              ...contact,
-              lastMessage: message.content,
-              timestamp: message.timestamp,
-              unread: selectedContact?.userId === contactId.toString() ? 
-                0 : (contact.unread || 0) + 1
-            };
-          }
-          return contact;
-        }));
-      }
-    });
-  
     return () => {
-      unsubscribe();
       wsService.disconnect();
     };
-  }, []);  
+  }, []);
 
   useEffect(() => {
     if (!contacts || !searchQuery) {
@@ -304,22 +257,84 @@ const Chat = () => {
 
   useEffect(() => {
     if (selectedContact) {
-      loadMessages(selectedContact.id);
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        console.error("No token found for WebSocket authentication");
+        return;
+      }
+  
+      console.log("Connecting WebSocket for contact:", selectedContact);
+      wsService.connect(token, selectedContact.userId);
+  
+      const unsubscribe = wsService.onMessage((data: any) => {
+        console.log('WebSocket message received:', data);
+  
+        // For regular messages
+        if (data.id && data.content) {
+          console.log('Processing message:', data);
+          
+          // Ensure this is a message for the current conversation
+          const isRelevantMessage = 
+            data.senderId === selectedContact.userId || 
+            data.senderId === user?.id;
+  
+          if (isRelevantMessage) {
+            const newMessage: Message = {
+              id: data.id.toString(),
+              content: data.content,
+              timestamp: data.timestamp || new Date().toISOString(),
+              senderId: data.senderId.toString(),
+              receiverId: data.receiverId.toString(),
+              senderName: data.senderName,
+              senderAvatar: data.senderAvatar,
+              isImage: data.isImage || false,
+              imageUrl: data.imageUrl,
+              isRead: data.isRead || false
+            };
+  
+            console.log('Adding new message to state:', newMessage);
+            setMessages(prev => [...prev, newMessage]);
+  
+            // Update contact's last message
+            setContacts(prev => prev.map(contact => {
+              if (contact.userId === selectedContact.userId) {
+                return {
+                  ...contact,
+                  lastMessage: data.content,
+                  timestamp: data.timestamp || new Date().toISOString()
+                };
+              }
+              return contact;
+            }));
+          }
+        }
+      });
+  
+      // Load messages for the selected contact
+      loadMessages(selectedContact);
+  
+      return () => {
+        unsubscribe();
+        wsService.disconnect();
+      };
     }
-  }, [selectedContact]);
+  }, [selectedContact, user?.id]);
 
-  const loadMessages = async (contactId: string) => {
-    if (!contactId) {
-      console.error("❌ No contact ID provided for loading messages.");
+  const loadMessages = async (contact: Contact) => {
+    if (!contact) {
+      console.error("❌ No contact provided for loading messages.");
       return;
     }
-  
+
+    const contactUserId = contact.userId; // ✅ This is the receiver's user ID
+    const contactId = contact.id; // ✅ This is the contact object ID in the DB
+
     try {
-      console.log('📌 Fetching messages for contact:', contactId);
-  
-      const response = await chatAPI.getMessages(contactId); // ✅ Use correct contact ID
+      console.log('📌 Fetching messages for contact user ID:', contactUserId);
+
+      const response = await chatAPI.getMessages(contactUserId); // ✅ Use userId for API call
       console.log('📌 Raw API Response:', response.data);
-  
+
       if (Array.isArray(response.data)) {
         const adaptedMessages = response.data.map(msg => ({
           id: msg.id.toString(),
@@ -333,101 +348,130 @@ const Chat = () => {
           imageUrl: msg.image_url || undefined,
           isRead: Boolean(msg.is_read),
         }));
-  
+
         console.log('📌 Adapted Messages:', adaptedMessages);
         setMessages(adaptedMessages);
       } else {
         console.log('📌 No messages found');
         setMessages([]);
       }
-  
-      await chatAPI.markAsRead(contactId);
-  
+
+      console.log(`📌 Marking messages as read for contact ID: ${contactId}`);
+      await chatAPI.markAsRead(contactId); // ✅ Use contact ID for marking as read
+
     } catch (error) {
       console.error('❌ Failed to load messages:', error);
       setMessages([]);
       setError('Failed to load messages. Please try again.');
     }
-  };  
-  
+};
+ 
 
-  const handleSendMessage = async (content: string) => {
-    if (!selectedContact || !content.trim()) {
-      return;
-    }
-  
-    try {
-      // Use userId (from contact_details.id) for sending messages
-      const response = await chatAPI.sendMessage(
-        selectedContact.userId,  // Use userId instead of id
-        content.trim()
-      );
-  
-      console.log('Message sent response:', response.data);
-  
-      // Add the new message to the messages list
-      const newMessage: Message = {
-        id: response.data.id.toString(),
-        content: response.data.content,
-        timestamp: response.data.created_at,
-        senderId: user?.id || '',
-        receiverId: selectedContact.userId,  // Use userId here too
-        senderName: user?.username || '',
-        senderAvatar: user?.avatar,
-        isImage: response.data.is_image,
-        imageUrl: response.data.image_url || undefined,
-        isRead: response.data.is_read
-      };
-  
-      setMessages(prev => [...prev, newMessage]);
-  
-      // Update the contact's last message
-      setContacts(prev => prev.map(contact => {
-        if (contact.id === selectedContact.id) {
-          return {
-            ...contact,
-            lastMessage: content.trim(),
-            timestamp: response.data.created_at
-          };
-        }
-        return contact;
-      }));
-  
-      // Send via WebSocket for real-time updates
-      wsService.sendMessage({
-        type: 'message',
-        receiver: parseInt(selectedContact.userId),  // Use userId here too
-        content: content.trim()
-      });
-  
-    } catch (error: any) {
-      console.error('Failed to send message:', error.response?.data || error);
-      const errorMessage = error.response?.data?.detail || 
-                          error.response?.data?.error || 
-                          'Failed to send message';
-      setError(errorMessage);
-    }
-  };
+const handleSendMessage = async (content: string) => {
+  if (!selectedContact || !content.trim()) {
+    return;
+  }
+
+  try {
+    const receiverId = selectedContact.userId;
+    console.log('📤 Sending message to userId:', receiverId);
+
+    // Ensure WebSocket connection is active
+    wsService.ensureConnection(receiverId);
+
+    // Send message via REST API
+    const response = await chatAPI.sendMessage(
+      receiverId,
+      content.trim()
+    );
+
+    console.log('✅ Message sent response:', response.data);
+
+    // Create new message object
+    const newMessage: Message = {
+      id: response.data.id.toString(),
+      content: response.data.content,
+      timestamp: response.data.created_at,
+      senderId: user?.id || '',
+      receiverId: receiverId,
+      senderName: user?.username || '',
+      senderAvatar: user?.avatar,
+      isImage: response.data.is_image,
+      imageUrl: response.data.image_url || undefined,
+      isRead: response.data.is_read
+    };
+
+    // Immediately add message to the messages list
+    setMessages(prev => [...prev, newMessage]);
+
+    // Update the contact's last message immediately
+    setContacts(prev => prev.map(contact => {
+      if (contact.userId === selectedContact.userId) {
+        return {
+          ...contact,
+          lastMessage: content.trim(),
+          timestamp: response.data.created_at
+        };
+      }
+      return contact;
+    }));
+
+    // Send via WebSocket for real-time updates to other clients
+    wsService.sendMessage({
+      type: 'message',
+      receiver: receiverId,
+      content: content.trim(),
+    });
+
+  } catch (error: any) {
+    console.error('❌ Failed to send message:', error.response?.data || error);
+    const errorMessage = error.response?.data?.detail || 
+                        error.response?.data?.error || 
+                        'Failed to send message';
+    setError(errorMessage);
+  }
+};
 
   const handleAddPerson = async (email: string, name: string) => {
+    if (!email.trim()) {
+      setError("Email is required.");
+      console.error("❌ Email is missing.");
+      return;
+    }
+
+    if (!name.trim()) {
+      console.warn("⚠️ Name is empty, defaulting to 'Unknown'.");
+      name = "Unknown"; // Provide a default name if empty
+    }
+
     try {
       setError(null);
-      console.log('Sending invitation data:', { email, name });  // Debug log
+      console.log('📌 Sending invitation data:', { email, name });
+
       const response = await chatAPI.invitePerson({ email, name });
-      console.log('Invitation response:', response.data);  // Debug log
+
+      console.log('✅ Invitation response:', response.data);
+
       setContacts(prev => [...prev, response.data]);
       setShowNotification(true);
       setTimeout(() => setShowNotification(false), 3000);
       setIsAddPersonOpen(false);
-    } catch (error) {
-      console.error('Failed to add person:', error);
-      const axiosError = error as any;
-      setError(
-        axiosError.response?.data?.detail || 
-        'Failed to add person. Please try again.'
-      );
+    } catch (error: any) {
+      console.error('❌ Failed to add person:', error);
+
+      if (error.response) {
+        console.log('❌ API Response Data:', error.response.data);
+        console.log('❌ Status Code:', error.response.status);
+      }
+
+      const errorMessage = error.response?.data?.email?.[0] || 
+                           error.response?.data?.detail ||
+                           'Failed to add person. Please try again.';
+
+      setError(errorMessage);
     }
-  };
+};
+  
 
   const handleNewMessage = (message: Message) => {
     if (selectedContact && 
@@ -468,14 +512,13 @@ const Chat = () => {
 
   const handleSelectContact = async (contact: Contact) => {
     console.log('Selecting contact:', contact);
-    setSelectedContact(contact);
     
     try {
       // Clear previous messages
       setMessages([]);
       
-      // Load messages for the selected contact
-      await loadMessages(contact.id);
+      // Set selected contact (this will trigger the WebSocket connection)
+      setSelectedContact(contact);
       
       // Mark messages as read
       await chatAPI.markAsRead(contact.id);

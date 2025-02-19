@@ -17,6 +17,7 @@ interface AuthContextType {
   register: (email: string, password: string, password2: string) => Promise<void>;
   logout: () => Promise<void>;
   googleLogin: (token: string) => Promise<void>;
+  updateProfile: (data: { email?: string; username?: string; avatar?: File }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -36,6 +37,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     }
     setIsLoading(false);
+  }, []);
+
+  // Add token expiration check
+  useEffect(() => {
+    const checkTokenExpiration = () => {
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          if (payload.exp * 1000 < Date.now()) {
+            logout();
+          }
+        } catch (error) {
+          console.error('Error checking token expiration:', error);
+          logout();
+        }
+      }
+    };
+
+    const interval = setInterval(checkTokenExpiration, 60000); // Check every minute
+    return () => clearInterval(interval);
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -64,7 +86,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } 
       });
     } catch (error: any) {
-      console.error('Registration error:', error.response?.data);
       throw new Error(error.response?.data?.detail || 'Registration failed');
     }
   };
@@ -78,6 +99,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.removeItem('user');
       setUser(null);
       navigate('/');
+    }
+  };
+
+  const updateProfile = async (data: { email?: string; username?: string; avatar?: File }) => {
+    try {
+      const formData = new FormData();
+      if (data.email) formData.append('email', data.email);
+      if (data.username) formData.append('username', data.username);
+      if (data.avatar) formData.append('avatar', data.avatar);
+
+      const response = await authAPI.updateProfile(formData);
+      const updatedUser = response.data;
+      
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      setUser(updatedUser);
+    } catch (error: any) {
+      throw new Error(error.response?.data?.detail || 'Failed to update profile');
     }
   };
 
@@ -98,7 +136,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout, googleLogin }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isLoading, 
+      login, 
+      register, 
+      logout, 
+      googleLogin,
+      updateProfile 
+    }}>
       {children}
     </AuthContext.Provider>
   );

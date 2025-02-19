@@ -10,7 +10,7 @@ interface ContactListProps {
 
 const ContactList = ({ contacts, selectedContact, onSelectContact }: ContactListProps) => {
   // Add debug logging
-  console.log('ContactList received contacts:', contacts);
+  // console.log('ContactList received contacts:', contacts);
 
   if (!contacts || contacts.length === 0) {
     return (
@@ -24,15 +24,18 @@ const ContactList = ({ contacts, selectedContact, onSelectContact }: ContactList
     <Box>
       {contacts.map((contact) => {
         // Add debug logging for each contact
-        console.log('Rendering contact:', contact);
+        // console.log('Rendering contact:', contact);
         
         // Safely access contact properties
         const name = contact?.name || 'Unknown';
         const avatar = contact?.avatar;
-        const lastMessage = typeof contact?.lastMessage === 'string' 
-          ? contact.lastMessage 
-          : 'No messages';
-        const timestamp = contact?.timestamp;
+        const lastMessage = contact?.lastMessage && typeof contact.lastMessage === 'object'
+        ? contact.lastMessage?.content || 'No messages'
+        : 'No messages';
+
+      const timestamp = contact?.lastMessage && typeof contact.lastMessage === 'object'
+        ? contact.lastMessage?.timestamp || 'No time'
+        : '';
         const unread = typeof contact?.unread === 'number' ? contact.unread : 0;
 
         return (
@@ -61,7 +64,7 @@ const ContactList = ({ contacts, selectedContact, onSelectContact }: ContactList
                 </Typography>
                 {timestamp && (
                   <Typography variant="caption" color="text.secondary">
-                    {new Date(timestamp).toLocaleString()}
+                    {timestamp}
                   </Typography>
                 )}
               </Box>

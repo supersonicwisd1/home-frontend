@@ -9,15 +9,15 @@ interface MessageListProps {
 }
 
 const MessageList = ({ messages, currentUserId }: MessageListProps) => {
-  console.log('📌 Rendering Messages:', messages); // Debug Log
-  console.log('MessageList received:', { 
-    messages, 
-    currentUserId,
-    messageCount: messages.length 
-  });
+  // console.log('📌 Rendering Messages:', messages); // Debug Log
+  // console.log('MessageList received:', { 
+  //   messages, 
+  //   currentUserId,
+  //   messageCount: messages.length 
+  // });
 
   if (!Array.isArray(messages)) {
-    console.error('Messages is not an array:', messages);
+    // console.error('Messages is not an array:', messages);
     return (
       <Box sx={{ flex: 1, p: 2, textAlign: 'center' }}>
         <Typography color="text.secondary">Error loading messages</Typography>
@@ -55,13 +55,13 @@ const MessageList = ({ messages, currentUserId }: MessageListProps) => {
             <Divider sx={{ flex: 1 }} />
           </Box>
           {dateMessages.map((message) => {
-            const isOwn = message.senderId === currentUserId;
-            console.log('Message ownership:', {
-              messageId: message.id,
-              senderId: message.senderId,
-              currentUserId,
-              isOwn
-            });
+            const isOwn = message.senderId.toString() === currentUserId.toString();
+            // console.log('Message ownership:', {
+            //   messageId: message.id,
+            //   senderId: message.senderId,
+            //   currentUserId,
+            //   isOwn
+            // });
             
             return (
               <ChatBubble

@@ -38,6 +38,13 @@ export const authAPI = {
   
   googleLogin: (token: string) => 
     api.post('/auth/google-auth/', { access_token: token }),
+
+  updateProfile: (data: FormData) =>
+    api.patch('/auth/avatar/', data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
 };
 
 // Add chatAPI export
@@ -48,7 +55,7 @@ export const chatAPI = {
   invitePerson: (data: { email: string; name?: string }) =>
     api.post('/messaging/contacts/invite/', {
       contact_details: {
-        email: data.email,
+        email: data.email, 
         username: data.name
       }
     }),
@@ -60,8 +67,9 @@ export const chatAPI = {
       }
       
       console.log('📌 Fetching messages with contact param:', contactId);
+      console.log("this is the contact id", contactId)
       return api.get(`/messaging/messages/`, {
-        params: { contact: "9" } // ✅ Use actual `contactId`
+        params: { contact: contactId } // ✅ Use actual `contactId`
       });
     },  
   
