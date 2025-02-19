@@ -226,7 +226,7 @@ const Chat = () => {
       
       const nameMatch = contact.name.toLowerCase().includes(searchQuery.toLowerCase());
       const messageMatch = contact.lastMessage ? 
-        contact.lastMessage.toLowerCase().includes(searchQuery.toLowerCase()) : 
+        contact.lastMessage.content.toLowerCase().includes(searchQuery.toLowerCase()) : 
         false;
       
       return nameMatch || messageMatch;
@@ -284,7 +284,7 @@ const Chat = () => {
               content: data.content,
               timestamp: data.timestamp || new Date().toISOString(),
               senderId: data.senderId.toString(),
-              receiverId: data.receiverId.toString(),
+              receiverId: data.receiverId?.toString(),
               senderName: data.senderName,
               senderAvatar: data.senderAvatar,
               isImage: data.isImage || false,
@@ -449,7 +449,7 @@ const handleNewMessage = (message: Message) => {
   setMessages((prev) => {
     // Check if message already exists to prevent duplication
     if (prev.some((msg) => msg.id === message.id)) {
-      console.warn(" Duplicate message detected, skipping:", message);
+      console.log("Duplicate message detected, skipping:", message);
       return prev;
     }
 
@@ -461,22 +461,60 @@ const handleNewMessage = (message: Message) => {
     ? message.receiverId
     : message.senderId;
 
-  updateContactLastMessage(contactId, message);
+  if (!contactId) {
+    console.warn("No valid contactId found for message:", message);
+    return;
+  }
+
+  setContacts(prev => prev.map(contact => {
+    if (contact.userId === contactId) {
+      // Create a properly typed lastMessage object
+      const lastMessage: Message = {
+        id: message.id,
+        content: message.content,
+        timestamp: message.timestamp,
+        senderId: message.senderId,
+        receiverId: message.receiverId,
+        senderName: message.senderName,
+        senderAvatar: message.senderAvatar || undefined,  // Handle possible null
+        isImage: Boolean(message.isImage),
+        imageUrl: message.imageUrl || undefined,  // Handle possible null
+        isRead: Boolean(message.isRead)
+      };
+
+      return {
+        ...contact,
+        lastMessage: message,
+        timestamp: message.timestamp  // Update contact timestamp
+      };
+    }
+    return contact;
+  }));
 };
 
-
-  const updateContactLastMessage = (contactId: string, message: Message) => {
-    setContacts(prev => prev.map(contact => {
-      if (contact.id === contactId) {
-        return {
-          ...contact,
-          lastMessage: message.content,
-          timestamp: message.timestamp
-        };
-      }
-      return contact;
-    }));
-  };
+const updateContactLastMessage = (contactId: string, message: Message) => {
+  setContacts(prev => prev.map(contact => {
+    if (contact.userId === contactId) {
+      return {
+        ...contact,
+        lastMessage: {
+          id: message.id,
+          content: message.content,
+          timestamp: message.timestamp,
+          senderId: message.senderId,
+          receiverId: message.receiverId,
+          senderName: message.senderName,
+          senderAvatar: message.senderAvatar,
+          isImage: message.isImage,
+          imageUrl: message.imageUrl,
+          isRead: message.isRead
+        },
+        timestamp: message.timestamp
+      };
+    }
+    return contact;
+  }));
+};
 
   const handleUserStatusChange = (data: { userId: string; online: boolean }) => {
     setContacts(prev => prev.map(contact => {

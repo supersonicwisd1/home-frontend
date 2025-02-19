@@ -50,8 +50,8 @@ export interface Message {
 }
 
 export interface Contact {
-  id: string;           // Contact record ID
-  userId: string;       // User ID for messages
+  id: string;         
+  userId: string;     
   name: string;
   email: string;
   avatar?: string;

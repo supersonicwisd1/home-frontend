@@ -1,6 +1,8 @@
 // src/components/ContactList.tsx
 import { Box, Typography, Avatar } from '@mui/material';
-import { Contact } from '../types';
+import { Contact, Message } from '../types';
+import { ChatIcon } from '../components/icons'
+import { format } from 'date-fns';
 
 interface ContactListProps {
   contacts: Contact[];
@@ -20,6 +22,14 @@ const ContactList = ({ contacts, selectedContact, onSelectContact }: ContactList
     );
   }
 
+  const formatTime = (timestamp: string) => {
+    try {
+      return format(new Date(timestamp), 'HH:mm a');
+    } catch (error) {
+      return '';
+    }
+  };
+
   return (
     <Box>
       {contacts.map((contact) => {
@@ -30,7 +40,7 @@ const ContactList = ({ contacts, selectedContact, onSelectContact }: ContactList
         const name = contact?.name || 'Unknown';
         const avatar = contact?.avatar;
         const lastMessage = contact.lastMessage ? contact.lastMessage.content : 'No messages';
-        const timestamp = contact.lastMessage ? contact.lastMessage.timestamp : '';
+        const timestamp = contact.lastMessage ? formatTime(contact.lastMessage.timestamp) : '';
 
         const unread = typeof contact?.unread === 'number' ? contact.unread : 0;
 
@@ -65,8 +75,13 @@ const ContactList = ({ contacts, selectedContact, onSelectContact }: ContactList
                 )}
               </Box>
               <Typography variant="body2" color="text.secondary" noWrap>
-                {lastMessage}
+                {lastMessage && typeof lastMessage === 'object' && 'content' in lastMessage 
+                  ? (lastMessage as Message).content 
+                  : 'No messages'}
               </Typography>
+
+
+
             </Box>
             {unread > 0 && (
               <Box

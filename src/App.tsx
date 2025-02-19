@@ -1,20 +1,20 @@
 // src/App.tsx
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { BrowserRouter } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
 import { Routes } from './routes';
+import { AuthProvider } from './context/AuthContext';
 
 const theme = createTheme();
 
 function App() {
   return (
     <BrowserRouter>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <AuthProvider>
+      <AuthProvider>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
           <Routes />
-        </AuthProvider>
-      </ThemeProvider>
+        </ThemeProvider>
+      </AuthProvider>
     </BrowserRouter>
   );
 }
