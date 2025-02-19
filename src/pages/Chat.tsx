@@ -101,7 +101,7 @@ const NoSelectedChat = () => (
     }}
   >
     <Box sx={{ mb: 2 }}>
-      <img src="/chat-icon.svg" alt="No chat selected" width="48" height="48" />
+      <ChatIcon />
     </Box>
     <Typography color="text.secondary">
       Click on chat to read conversation

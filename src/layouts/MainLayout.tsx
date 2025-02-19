@@ -27,6 +27,7 @@ import {
   Edit as EditIcon,
   PhotoCamera as CameraIcon
 } from '@mui/icons-material';
+import { ChatIcon } from '../components/icons'
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -136,7 +137,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
             cursor: 'pointer'
           }}
         >
-          <MessagesIcon sx={{ fontSize: 20 }} />
+          <ChatIcon />
           <a href=''><Typography sx={{ fontSize: '16px' }}>Messages</Typography></a>
         </Box>
 

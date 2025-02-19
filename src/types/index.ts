@@ -55,7 +55,7 @@ export interface Contact {
   name: string;
   email: string;
   avatar?: string;
-  lastMessage?: string;
+  lastMessage?: Message;
   timestamp?: string;
   unread?: number;
   online?: boolean;

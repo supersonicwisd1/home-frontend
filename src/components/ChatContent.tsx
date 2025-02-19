@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Box, Typography, Button, TextField, Avatar, IconButton } from '@mui/material';
 import { Send as SendIcon } from '@mui/icons-material';
+import { ChatIcon } from '../components/icons'
 
 const ChatContent = () => {
   const [message, setMessage] = useState('');
@@ -20,6 +21,7 @@ const ChatContent = () => {
             justifyContent: 'center'
           }}
         >
+          <ChatIcon />
           <Typography variant="h6" sx={{ mb: 1 }}>No Chats</Typography>
           <Typography color="text.secondary" sx={{ mb: 3 }}>
             You have not received or send anyone a message.

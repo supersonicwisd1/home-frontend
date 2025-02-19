@@ -82,7 +82,8 @@ export const MessageIcon = () => (
 );
 
 export const ChatIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-  </svg>
+  <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M45.2673 42C46.162 40.2498 46.6667 38.2672 46.6667 36.1667C46.6667 29.079 40.921 23.3333 33.8333 23.3333C26.7457 23.3333 21 29.079 21 36.1667C21 43.2543 26.7457 49 33.8333 49L49 49C49 49 46.6667 46.6667 45.3001 42.0681M10.3291 30.3333C9.68423 28.5088 9.33333 26.5454 9.33333 24.5C9.33333 14.835 17.1683 7 26.8333 7C36.4983 7 44.3333 14.835 44.3333 24.5C44.3333 25.6986 44.2128 26.8691 43.9833 28M10.3268 30.306C12.8333 37.3333 7 42 7 42H22.1667" stroke="#BDBDBD" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
 );
+

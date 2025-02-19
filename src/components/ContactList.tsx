@@ -29,13 +29,9 @@ const ContactList = ({ contacts, selectedContact, onSelectContact }: ContactList
         // Safely access contact properties
         const name = contact?.name || 'Unknown';
         const avatar = contact?.avatar;
-        const lastMessage = contact?.lastMessage && typeof contact.lastMessage === 'object'
-        ? contact.lastMessage?.content || 'No messages'
-        : 'No messages';
+        const lastMessage = contact.lastMessage ? contact.lastMessage.content : 'No messages';
+        const timestamp = contact.lastMessage ? contact.lastMessage.timestamp : '';
 
-      const timestamp = contact?.lastMessage && typeof contact.lastMessage === 'object'
-        ? contact.lastMessage?.timestamp || 'No time'
-        : '';
         const unread = typeof contact?.unread === 'number' ? contact.unread : 0;
 
         return (
