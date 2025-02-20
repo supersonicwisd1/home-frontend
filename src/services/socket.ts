@@ -30,12 +30,13 @@ export class WebSocketService {
       this.socket = null;
     }
 
-    const wsUrl = `ws://home-backend-gntw.onrender.com/ws/chat/?token=${encodeURIComponent(token)}${
-      contactId ? `&contact_id=${contactId}` : ''
+    const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
+    const wsUrl = `${wsProtocol}://home-backend-gntw.onrender.com/ws/chat/?token=${encodeURIComponent(token)}${
+          contactId ? `&contact_id=${contactId}` : ''
     }`;
 
-    // console.log("Connecting to:", wsUrl);
     this.socket = new WebSocket(wsUrl);
+
 
     this.socket.onopen = () => {
       console.log("WebSocket Connected Successfully");
