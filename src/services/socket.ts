@@ -30,7 +30,7 @@ export class WebSocketService {
       this.socket = null;
     }
 
-    const wsUrl = `ws://127.0.0.1:8000/ws/chat/?token=${encodeURIComponent(token)}${
+    const wsUrl = `ws://home-backend-gntw.onrender.com/ws/chat/?token=${encodeURIComponent(token)}${
       contactId ? `&contact_id=${contactId}` : ''
     }`;
 
@@ -47,7 +47,7 @@ export class WebSocketService {
     this.socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        console.log("📥 Received message:", data);
+        console.log("Received message:", data);
         this.messageHandlers.forEach(handler => handler(data));
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
